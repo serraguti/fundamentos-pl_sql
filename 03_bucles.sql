@@ -163,3 +163,53 @@ begin
     dbms_output.put_line('Fin de programa');
 end;
 undefine valor;
+
+--TABLA DE MULTIPLICAR DE UN NUMERO
+declare
+    numero int;
+    operacion int;
+begin
+    numero := &valor;
+    for i in 1..10 loop
+        operacion := numero * i;
+        dbms_output.put_line(numero || '*' || i || '=' || operacion);
+    end loop;
+    dbms_output.put_line('Fin de programa');
+end;
+undefine valor;
+
+declare 
+    v_texto varchar2(50);
+    v_longitud int;
+    v_letra varchar2(1);
+begin
+    v_texto := '&texto';
+    --UN ELEMENTO EN ORACLE EMPIEZA EN 1
+    --LUNESITO
+    v_longitud := length(v_texto);
+    for i in 1..v_longitud loop
+        v_letra := substr(v_texto, i, 1);
+        dbms_output.put_line(v_letra);
+    end loop;
+    dbms_output.put_line('Fin de programa');
+end;
+undefine texto;
+
+declare
+    v_texto_numero varchar2(50);
+    v_longitud int;
+    v_letra char(1);
+    v_numero int;
+    v_suma int;
+begin
+    v_suma := 0;
+    v_texto_numero := &texto;
+    v_longitud := length(v_texto_numero);
+    for i in 1..v_longitud loop
+        v_letra := substr(v_texto_numero, i, 1);
+        v_numero := to_number(v_letra);
+        v_suma := v_suma + v_numero;
+    end loop;
+    dbms_output.put_line('La suma de ' || v_texto_numero || ' es ' || v_suma);
+end;
+undefine texto;
