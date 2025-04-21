@@ -79,3 +79,87 @@ begin
         null;
     end if;
 end;
+--EJEMPLOS
+--BUCLE PARA MOSTRAR LOS NUMEROS ENTRE 1 Y 10 
+--1) BUCLE WHILE
+declare 
+    i int;
+begin
+    i := 1;
+    while i <= 10 loop
+        dbms_output.put_line(i);
+        i := i + 1;
+    end loop;
+    dbms_output.put_line('Fin de bucle while');
+end;
+--2) BUCLE FOR
+declare 
+    
+begin
+    for i in 1..10 loop
+        dbms_output.put_line(i);
+    end loop;
+    dbms_output.put_line('Fin de bucle For');
+end;
+--PEDIR AL USUARIO UN NUMERO INICIO &inicio
+--Y UN NUMERO FINAL
+--MOSTRAR LOS NUMEROS COMPRENDIDOS ENTRE DICHO RANGO
+--SI EL NUMERO INICIAL ES MAYOR, LO INDICAMOS Y NO HACEMOS EL BUCLE.
+declare
+    inicio int;
+    fin int;
+begin
+    inicio := &inicial;
+    fin := &final;
+    --preguntamos por los valores de los numeros
+    if (inicio >= fin) then
+        dbms_output.put_line('El número de inicio (' || inicio || 
+        ') debe ser menor al número de fin (' || fin || ')');
+    else 
+        for i in inicio..fin loop
+            dbms_output.put_line(i);
+        end loop;        
+    end if;
+    dbms_output.put_line('fin de programa');
+end;
+undefine inicial;
+undefine final;
+--QUEREMOS UN BUCLE PIDIENDO UN INICIO Y UN FIN
+--MOSTRAR LOS NUMEROS PARES COMPRENDIDOS ENTRE DICHO INICIO Y FIN
+declare
+    ini int;
+    fin int;
+begin
+    ini := &inicial;
+    fin := &final;
+    for i in ini..fin loop
+        if (mod(i, 2) = 0) then 
+            dbms_output.put_line(i);
+        end if;
+    end loop;
+    dbms_output.put_line('Fin de programa');
+end;
+undefine inicial;
+undefine final;
+--CONJETURA DE COLLATZ
+--La teoría indica que cualquier número siempre llegará a ser 1
+--siguiendo una serie de instrucciones:
+--Si el número es Par, se divide entre 2
+--Si el número es Impar, se multiplica por 3 y sumamos 1
+--6,3,10,5,16,8,4,2,1
+declare
+    numero int;
+begin
+    numero := &valor;
+    while numero <> 1 loop
+        --AVERIGUAMOS SI ES PAR/IMPAR
+        if (mod(numero, 2) = 0) then
+            numero := numero / 2;
+        else 
+            numero := numero * 3 + 1;
+        end if;
+        dbms_output.put_line(numero);
+    end loop;
+    dbms_output.put_line('Fin de programa');
+end;
+undefine valor;
