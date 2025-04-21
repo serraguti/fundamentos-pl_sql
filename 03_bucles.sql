@@ -38,4 +38,44 @@ begin
     dbms_output.put_line('La suma de los 100 primeros números es '
     || suma);
 end;
-
+--3) BUCLE FOR..LOOP (CONTADOR)
+--CUANDO SABEMOS EL INICIO Y EL FINAL
+declare
+    suma int;
+begin
+    suma := 0;
+    dbms_output.put_line('Inicio');
+    dbms_output.put_line('Antes del bucle');    
+    for contador in 1..100 loop
+        suma := suma + contador;
+    end loop;
+    dbms_output.put_line('Después del bucle');    
+    dbms_output.put_line('La suma de los primeros 100 números es ' || suma);
+end;
+--4) ETIQUETAS GOTO
+declare
+    suma int;
+begin
+    suma := 0;
+    dbms_output.put_line('Inicio');
+    goto codigo;
+    dbms_output.put_line('Antes del bucle');    
+    for contador in 1..100 loop
+        suma := suma + contador;
+    end loop;
+    <<codigo>>
+    dbms_output.put_line('Después del bucle');    
+    dbms_output.put_line('La suma de los primeros 100 números es ' || suma);
+end;
+--5) ORDEN NULL
+declare
+    i int;
+begin
+    --debemos iniciar las variables
+    i := 1;
+    if (i >= 1) then
+        dbms_output.put_line('i es mayor a 1');
+    else
+        null;
+    end if;
+end;
