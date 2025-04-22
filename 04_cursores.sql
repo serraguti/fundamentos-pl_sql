@@ -37,9 +37,9 @@ begin
     v_id := &iddepartamento;
     v_nombre := '&nombre';
     v_localidad := '&localidad';
-    select DEPT_NO into v_existe from DEPT
+    select COUNT(DEPT_NO) into v_existe from DEPT
     where DEPT_NO=v_id;
-    if (v_existe is null) then
+    if (v_existe = 0) then
         dbms_output.put_line('Insert');
     else
         dbms_output.put_line('Update');
@@ -48,9 +48,6 @@ end;
 undefine iddepartamento;
 undefine nombre;
 undefine localidad;
-
-
-    select * from DEPT;
 --CURSORES IMPLICITOS SOLAMENTE PUEDEN
 --DEVOLVER UNA FILA Y siempre una fila
 --recuperar el oficio del empleado REY
