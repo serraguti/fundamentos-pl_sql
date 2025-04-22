@@ -1,53 +1,3 @@
---Realizar un código PL/SQL dónde pediremos 
---el número, nombre y localidad de un departamento.
---Si el departamento existe, modificamos su nombre y localidad
---si el departamento no existe, lo insertamos.
---BLOQUE CON CURSOR EXPLICITO
-declare
-    v_id DEPT.DEPT_NO%TYPE;
-    v_nombre DEPT.DNOMBRE%TYPE;
-    v_localidad DEPT.LOC%TYPE;
-    v_existe DEPT.DEPT_NO%TYPE;
-    cursor CURSORDEPT is
-    select DEPT_NO from DEPT
-    where DEPT_NO=v_id;
-begin
-    v_id := &iddepartamento;
-    v_nombre := '&nombre';
-    v_localidad := '&localidad';
-    open CURSORDEPT;
-    fetch CURSORDEPT into v_existe;
-    if (CURSORDEPT%found) then
-        dbms_output.put_line('UPDATE');
-        update DEPT set DNOMBRE=v_nombre, LOC=v_localidad
-        where DEPT_NO=v_id;
-    else 
-        dbms_output.put_line('INSERT');
-        insert into DEPT values (v_id, v_nombre, v_localidad);
-    end if;
-    close CURSORDEPT;
-end;
-
-declare 
-    v_id DEPT.DEPT_NO%TYPE;
-    v_nombre DEPT.DNOMBRE%TYPE;
-    v_localidad DEPT.LOC%TYPE;
-    v_existe DEPT.DEPT_NO%TYPE;
-begin
-    v_id := &iddepartamento;
-    v_nombre := '&nombre';
-    v_localidad := '&localidad';
-    select COUNT(DEPT_NO) into v_existe from DEPT
-    where DEPT_NO=v_id;
-    if (v_existe = 0) then
-        dbms_output.put_line('Insert');
-    else
-        dbms_output.put_line('Update');
-    end if;
-end;
-undefine iddepartamento;
-undefine nombre;
-undefine localidad;
 --CURSORES IMPLICITOS SOLAMENTE PUEDEN
 --DEVOLVER UNA FILA Y siempre una fila
 --recuperar el oficio del empleado REY
@@ -115,4 +65,65 @@ begin
     dbms_output.put_line('Salario incrementado a '
     || SQL%ROWCOUNT || ' empleados. Sr/Sra ' || v_apellido);
 end;
+
+--Realizar un código PL/SQL dónde pediremos 
+--el número, nombre y localidad de un departamento.
+--Si el departamento existe, modificamos su nombre y localidad
+--si el departamento no existe, lo insertamos.
+--BLOQUE CON CURSOR EXPLICITO
+declare
+    v_id DEPT.DEPT_NO%TYPE;
+    v_nombre DEPT.DNOMBRE%TYPE;
+    v_localidad DEPT.LOC%TYPE;
+    v_existe DEPT.DEPT_NO%TYPE;
+    cursor CURSORDEPT is
+    select DEPT_NO from DEPT
+    where DEPT_NO=v_id;
+begin
+    v_id := &iddepartamento;
+    v_nombre := '&nombre';
+    v_localidad := '&localidad';
+    open CURSORDEPT;
+    fetch CURSORDEPT into v_existe;
+    if (CURSORDEPT%found) then
+        dbms_output.put_line('UPDATE');
+        update DEPT set DNOMBRE=v_nombre, LOC=v_localidad
+        where DEPT_NO=v_id;
+    else 
+        dbms_output.put_line('INSERT');
+        insert into DEPT values (v_id, v_nombre, v_localidad);
+    end if;
+    close CURSORDEPT;
+end;
+
+declare 
+    v_id DEPT.DEPT_NO%TYPE;
+    v_nombre DEPT.DNOMBRE%TYPE;
+    v_localidad DEPT.LOC%TYPE;
+    v_existe DEPT.DEPT_NO%TYPE;
+begin
+    v_id := &iddepartamento;
+    v_nombre := '&nombre';
+    v_localidad := '&localidad';
+    select COUNT(DEPT_NO) into v_existe from DEPT
+    where DEPT_NO=v_id;
+    if (v_existe = 0) then
+        dbms_output.put_line('Insert');
+    else
+        dbms_output.put_line('Update');
+    end if;
+end;
+undefine iddepartamento;
+undefine nombre;
+undefine localidad;
+
+--Realizar un código pl/sql para modificar el salario del 
+--empleado ARROYO
+--Si el empleado cobra más de 250.000, le bajamos el sueldo en 10.000
+--Si no, le subimos el sueldo en 10.000
+
+
+
+
+
 
