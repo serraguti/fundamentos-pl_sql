@@ -1,3 +1,4 @@
+
 --VAMOS A MOSTRAR LA SUMA DE LOS PRIMEROS 100 NUMEROS
 --1) LOOP..END LOOP
 declare
@@ -213,3 +214,30 @@ begin
     dbms_output.put_line('La suma de ' || v_texto_numero || ' es ' || v_suma);
 end;
 undefine texto;
+--bloque para consultas de acción
+--insertar 5 departamentos en un bloque pl/sql dinámico
+declare
+    v_nombre dept.dnombre%type;
+    v_loc dept.loc%type;
+begin
+    --vamos a realizar un bucle para insertar 5 departamentos
+    for i in 1..5 loop
+        v_nombre := 'Departamento ' || i;
+        v_loc := 'Localidad ' || i;
+        insert into DEPT values 
+        ((select max(DEPT_NO) + 1 from DEPT)
+            , v_nombre, v_loc);
+    end loop;
+    dbms_output.put_line('Fin de programa');
+end;
+select * from DEPT;
+rollback;
+--realizar un bloque pl/sql que pedirá un número al 
+--usuario y mostrará el departamento con dicho número
+declare
+    v_id int;
+begin
+    v_id := &numero;
+    select * from DEPT where DEPT_NO=v_id;
+end;
+undefine numero;
