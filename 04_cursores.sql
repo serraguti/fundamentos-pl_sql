@@ -137,7 +137,56 @@ begin
     dbms_output.put_line('Salario modificado: ' || v_salario);
 end;
 
-
+--Necesito mostrar la suma salarial de los doctores de la paz.
+--Realizar el siguiente código pl/sql.
+--Necesitamos modificar el salario de los doctores de LA PAZ.
+--Si la suma salarial supera 1.000.000 bajamos salarios en 10.000 a todos
+--Si la suma salarial no supera el millón, subimos salarios en 10.000
+--Mostrar el número de filas que hemos modificado (subir o bajar)
+--Doctores con suerte: 6, Doctores más pobres: 6
+describe doctor;
+declare
+   v_suma_salarial NUMBER; 
+begin
+    select sum(DOCTOR.SALARIO) into v_suma_salarial
+    from DOCTOR
+    inner join HOSPITAL
+    on DOCTOR.HOSPITAL_COD = HOSPITAL.HOSPITAL_COD
+    where lower(HOSPITAL.NOMBRE)='la paz';
+    dbms_output.put_line('Suma salarial La paz: ' || v_suma_salarial);    
+    if v_suma_salarial > 1000000 then
+        update DOCTOR set SALARIO = SALARIO - 10000
+        where hospital_cod=
+        (select HOSPITAL_COD from HOSPITAL where UPPER(NOMBRE)='LA PAZ');
+        dbms_output.put_line('Bajando salarios: ' || SQL%ROWCOUNT);
+    else 
+        update DOCTOR set SALARIO = SALARIO + 10000
+        where hospital_cod=
+        (select HOSPITAL_COD from HOSPITAL where UPPER(NOMBRE)='LA PAZ');
+        dbms_output.put_line('Doctores ricos ' || SQL%ROWCOUNT);
+    end if;
+end;
+--SOLUCION 2
+declare
+   v_suma_salarial NUMBER; 
+   v_codigo HOSPITAL.HOSPITAL_COD%TYPE;
+begin
+    select HOSPITAL_COD into v_codigo from HOSPITAL
+    where lower(NOMBRE)='la paz';
+    select sum(SALARIO) into v_suma_salarial
+    from DOCTOR 
+    where HOSPITAL_COD=v_codigo;
+    dbms_output.put_line('Suma salarial La paz: ' || v_suma_salarial);    
+    if v_suma_salarial > 1000000 then
+        update DOCTOR set SALARIO = SALARIO - 10000
+        where hospital_cod=v_codigo;
+        dbms_output.put_line('Bajando salarios: ' || SQL%ROWCOUNT);
+    else 
+        update DOCTOR set SALARIO = SALARIO + 10000
+        where hospital_cod=v_codigo;
+        dbms_output.put_line('Doctores ricos ' || SQL%ROWCOUNT);
+    end if;
+end;
 
 
 
