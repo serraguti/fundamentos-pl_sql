@@ -121,7 +121,21 @@ undefine localidad;
 --empleado ARROYO
 --Si el empleado cobra más de 250.000, le bajamos el sueldo en 10.000
 --Si no, le subimos el sueldo en 10.000
-
+declare
+    v_salario EMP.SALARIO%TYPE;
+    v_idemp EMP.EMP_NO%TYPE;
+begin
+    select EMP_NO, SALARIO into v_idemp, v_salario from EMP
+    where UPPER(APELLIDO)='ARROYO';
+    if v_salario > 250000 then
+        v_salario := v_salario - 10000;
+    else
+        v_salario := v_salario + 10000;
+    end if;
+    update EMP set SALARIO=v_salario 
+    where EMP_NO=v_idemp;
+    dbms_output.put_line('Salario modificado: ' || v_salario);
+end;
 
 
 
