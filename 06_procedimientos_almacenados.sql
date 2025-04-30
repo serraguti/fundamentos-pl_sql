@@ -179,3 +179,98 @@ select * from DOCTOR order by doctor_no desc;
 --DEBEMOS RECUPERAR EL MAXIMO ID DE DOCTOR DENTRO DEL PROCEDIMIENTO
 --ENVIAMOS EL NOMBRE DEL HOSPITAL EN LUGAR DEL ID DEL HOSPITAL
 --CONTROLAR SI NO EXISTE EL HOSPITAL ENVIADO
+create or replace procedure sp_insertar_doctor
+(p_apellido DOCTOR.APELLIDO%TYPE
+, p_especialidad DOCTOR.ESPECIALIDAD%TYPE
+, p_salario DOCTOR.SALARIO%TYPE
+, p_hospital_nombre HOSPITAL.NOMBRE%TYPE)
+as
+    v_max_iddoctor DOCTOR.DOCTOR_NO%TYPE;
+    v_hospitalcod HOSPITAL.HOSPITAL_COD%TYPE;
+begin
+    select HOSPITAL_COD into v_hospitalcod
+    from HOSPITAL
+    where upper(NOMBRE) = upper(p_hospital_nombre);
+    select max(DOCTOR_NO) + 1 into v_max_iddoctor from DOCTOR;
+    insert into DOCTOR values (v_hospitalcod, v_max_iddoctor
+    , p_apellido, p_especialidad, p_salario);
+    dbms_output.put_line('Insertados ' || SQL%ROWCOUNT); 
+    commit;
+exception
+    when no_data_found then
+        dbms_output.put_line('No existe el hospital ' || p_hospital_nombre);
+end;
+begin
+    SP_INSERTAR_DOCTOR('House', 'Diagnostico', 380000, 'la plaza');
+end;
+select * from DOCTOR order by doctor_no desc;
+--PODEMOS UTILIZAR CURSORES EXPLICITOS DENTRO DE LOS PROCEDIMIENTOS
+--Realizar un procedimiento para mostrar los empleados
+--de un determinado número de departamento.
+create or replace procedure sp_empleados_dept
+(p_deptno EMP.DEPT_NO%TYPE)
+as
+    cursor cursor_emp is
+    select * from EMP
+    where DEPT_NO = p_deptno;
+begin
+    for v_reg_emp in cursor_emp
+    loop
+        dbms_output.put_line('Apellido: ' || v_reg_emp.APELLIDO
+        || ', Oficio: ' || v_reg_emp.OFICIO);
+    end loop;
+end;
+begin
+    SP_EMPLEADOS_DEPT(10);
+end;
+
+create or replace procedure EjemploOpcionales
+(p_uno int, p_dos int := 0, p_tres int := 0, p_cuatro int := 0)
+as
+begin
+    dbms_output.put_line('algo');
+end;
+begin
+    EjemploOpcionales(8); --error
+    EjemploOpcionales(8, p_cuatro => 77, p_tres => 9); 
+    EjemploOpcionales(8, 9, 10);
+end;
+--VAMOS A REALIZAR UN PROCEDIMIENTO PARA ENVIAR EL 
+--NOMBRE DEL DEPARTAMENTO Y DEVOLVER EL NUMERO DE DICHO DEPARTAMENTO
+create or replace procedure sp_numerodepartamento
+(p_nombre DEPT.DNOMBRE%TYPE, p_iddept out DEPT.DEPT_NO%TYPE)
+as
+    v_iddept DEPT.DEPT_NO%TYPE;
+begin
+    select DEPT_NO into v_iddept 
+    from DEPT
+    where upper(DNOMBRE) = upper(p_nombre);
+    p_iddept := v_iddept;
+    dbms_output.put_line('El número de departamento es ' || v_iddept);    
+end;
+begin
+    SP_NUMERODEPARTAMENTO('ventas');
+end;
+--NECESITO UN PROCEDIMIENTO PARA INCREMENTAR EN 1 
+--EL SALARIO DE LOS EMPLEADOS DE UN DEPARTAMENTO.
+--ENVIAREMOS AL PROCEDIMIENTO EL NOMBRE DEL DEPARTAMENTO
+create or replace procedure sp_incrementar_sal_dept
+(p_nombre DEPT.DNOMBRE%TYPE)
+as
+    v_num DEPT.DEPT_NO%TYPE;
+begin
+    --recuperamos el id del departamento a partir del nombre
+    --llamamos al procedimiento de numero para recuperar el numero 
+    --a partir del nombre
+    --sp_numerodepartamento
+    --(p_nombre DEPT.DNOMBRE%TYPE, p_iddept out DEPT.DEPT_NO%TYPE)
+    SP_NUMERODEPARTAMENTO(p_nombre, v_num);
+    update EMP set SALARIO = SALARIO + 1
+    where DEPT_NO=v_num;
+    dbms_output.put_line('Salarios modificados: ' || SQL%ROWCOUNT);
+end;
+begin
+    SP_INCREMENTAR_SAL_DEPT('ventas');
+end;
+
+select * from DEPT;
