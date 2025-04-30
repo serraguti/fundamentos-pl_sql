@@ -114,18 +114,68 @@ rollback;
 --REALIZAR UN PROCEDIMIENTO PARA INSERTAR UN NUEVO DEPARTAMENTO
 --GENERAMOS EL ID CON EL MAX AUTOMATICO DENTRO DEL PROCEDURE
 create or replace procedure sp_insertardepartamento
-(p_id DEPT.DEPT_NO%TYPE
-, p_nombre DEPT.DNOMBRE%TYPE
+(p_nombre DEPT.DNOMBRE%TYPE
 , p_localidad DEPT.LOC%TYPE)
 as
+    v_max_id DEPT.DEPT_NO%TYPE;
 begin
-    insert into DEPT values (p_id, p_nombre, p_localidad);
+    --REALIZAMOS EL CURSOR IMPLICITO PARA BUSCAR EL MAX ID
+    select max(DEPT_NO) + 1 into v_max_id from DEPT;
+    insert into DEPT values (v_max_id, p_nombre, p_localidad);
     --normalmente, dentro de los procedimientos de acción se incluye
     --commit o rollback si diera una excepción
     commit;
+exception 
+    when no_data_found THEN
+        dbms_output.put_line('No existen datos');
+        rollback;
 end;
 --llamada al procedimiento
 begin
-    sp_insertardepartamento(11, '11', '11');
+    sp_insertardepartamento('miercoles', 'miercoles');
 end;
 select * from DEPT;
+--REALIZAR UN PROCEDIMIENTO PARA INCREMENTAR EL SALARIO DE 
+--LOS EMPLEADOS POR UN OFICIO.
+--DEBEMOS ENVIAR EL OFICIO Y EL INCREMENTO.
+/
+create or replace procedure sp_incremento_emp_oficio
+(p_oficio EMP.OFICIO%TYPE, p_incremento number)
+as
+begin
+   update EMP set SALARIO = SALARIO + p_incremento
+   where upper(OFICIO) = upper(p_oficio);
+   commit; 
+end;
+/
+begin
+    SP_INCREMENTO_EMP_OFICIO('analista', 1);
+end;
+select * from EMP where oficio = 'ANALISTA';
+--NECESITO UN PROCEDIMIENTO PARA INSERTAR UN DOCTOR.
+--ENVIAREMOS TODOS LOS DATOS DEL DOCTOR, EXCEPTO EL ID
+--DEBEMOS RECUPERAR EL MAXIMO ID DE DOCTOR DENTRO DEL PROCEDIMIENTO
+create or replace procedure sp_insertar_doctor
+(p_apellido DOCTOR.APELLIDO%TYPE
+, p_especialidad DOCTOR.ESPECIALIDAD%TYPE
+, p_salario DOCTOR.SALARIO%TYPE
+, p_hospital DOCTOR.HOSPITAL_COD%TYPE)
+as
+    v_max_iddoctor DOCTOR.DOCTOR_NO%TYPE;
+begin
+    select max(DOCTOR_NO) + 1 into v_max_iddoctor from DOCTOR;
+    insert into DOCTOR values (p_hospital, v_max_iddoctor
+    , p_apellido, p_especialidad, p_salario);
+    commit;
+    dbms_output.put_line('Insertados ' || SQL%ROWCOUNT); 
+end;
+begin
+    SP_INSERTAR_DOCTOR('Willson2', 'Doctor', 280000, 19);
+end;
+select * from DOCTOR order by doctor_no desc;
+--VERSION 2
+--NECESITO UN PROCEDIMIENTO PARA INSERTAR UN DOCTOR.
+--ENVIAREMOS TODOS LOS DATOS DEL DOCTOR, EXCEPTO EL ID
+--DEBEMOS RECUPERAR EL MAXIMO ID DE DOCTOR DENTRO DEL PROCEDIMIENTO
+--ENVIAMOS EL NOMBRE DEL HOSPITAL EN LUGAR DEL ID DEL HOSPITAL
+--CONTROLAR SI NO EXISTE EL HOSPITAL ENVIADO
