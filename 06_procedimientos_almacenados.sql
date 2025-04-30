@@ -91,3 +91,41 @@ EXCEPTION
     when ZERO_DIVIDE then
         dbms_output.put_line('División entre cero, PL/SQL outer');
 end;
+
+--REALIZAR UN PROCEDIMIENTO PARA INSERTAR UN NUEVO DEPARTAMENTO
+create or replace procedure sp_insertardepartamento
+(p_id DEPT.DEPT_NO%TYPE
+, p_nombre DEPT.DNOMBRE%TYPE
+, p_localidad DEPT.LOC%TYPE)
+as
+begin
+    insert into DEPT values (p_id, p_nombre, p_localidad);
+    --normalmente, dentro de los procedimientos de acción se incluye
+    --commit o rollback si diera una excepción
+    commit;
+end;
+--llamada al procedimiento
+begin
+    sp_insertardepartamento(11, '11', '11');
+end;
+select * from DEPT;
+rollback;
+--VERSION 2
+--REALIZAR UN PROCEDIMIENTO PARA INSERTAR UN NUEVO DEPARTAMENTO
+--GENERAMOS EL ID CON EL MAX AUTOMATICO DENTRO DEL PROCEDURE
+create or replace procedure sp_insertardepartamento
+(p_id DEPT.DEPT_NO%TYPE
+, p_nombre DEPT.DNOMBRE%TYPE
+, p_localidad DEPT.LOC%TYPE)
+as
+begin
+    insert into DEPT values (p_id, p_nombre, p_localidad);
+    --normalmente, dentro de los procedimientos de acción se incluye
+    --commit o rollback si diera una excepción
+    commit;
+end;
+--llamada al procedimiento
+begin
+    sp_insertardepartamento(11, '11', '11');
+end;
+select * from DEPT;
