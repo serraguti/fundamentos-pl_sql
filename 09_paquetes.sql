@@ -188,8 +188,46 @@ create or replace view V_TODOS_EMPLEADOS as
     on PLANTILLA.HOSPITAL_COD=HOSPITAL.HOSPITAL_COD;
 select * from V_TODOS_EMPLEADOS;
 --3) PAQUETE CON DOS PROCEDIMIENTOS
+create or replace package pk_vista_empleados
+as
+    procedure todos_empleados;
+    procedure todos_empleados_salario(p_salario EMP.SALARIO%TYPE);
+end pk_vista_empleados;
+--body
+create or replace package body pk_vista_empleados
+as
+    procedure todos_empleados
+    as
+        cursor c_empleados is
+        select * from V_TODOS_EMPLEADOS;
+    begin
+        for v_emp in c_empleados
+        loop
+            dbms_output.put_line(v_emp.APELLIDO || ', Oficio: '
+            || v_emp.OFICIO || ', Salario: ' || v_emp.SALARIO
+            || ', Lugar: ' || v_emp.DNOMBRE);
+        end loop;
+    end;
+    procedure todos_empleados_salario(p_salario EMP.SALARIO%TYPE)
+    as
+        cursor c_empleados is
+        select * from V_TODOS_EMPLEADOS
+        where SALARIO >= p_salario;
+    begin
+        for v_emp in c_empleados
+        loop
+            dbms_output.put_line(v_emp.APELLIDO || ', Oficio: '
+            || v_emp.OFICIO || ', Salario: ' || v_emp.SALARIO
+            || ', Lugar: ' || v_emp.DNOMBRE);
+        end loop;
+    end;
+end pk_vista_empleados;
 --3A) PROCEDIMIENTO PARA DEVOLVER TODOS LOS DATOS EN UN CURSOR
 --3B) PROCEDIMIENTO PARA DEVOLVER TODOS LOS DATOS EN UN CURSOR POR SALARIO
+begin
+    --PK_VISTA_EMPLEADOS.TODOS_EMPLEADOS;
+    PK_VISTA_EMPLEADOS.TODOS_EMPLEADOS_SALARIO(350000);
+end;
 ---------------------------------------------------------------
 --Necesitamos un paquete con procedimiento para modificar el salario de cada 
 --Doctor de forma individual.
@@ -201,5 +239,5 @@ select * from V_TODOS_EMPLEADOS;
 --3) Doctor mayor a 300.000: Incremento aleatorio de 50
 --El incremento Random lo haremos con una función dentro del paquete.
 update doctor set salario = salario + dbms_random.value(1,50);
-select dbms_random.value(1,50) from DUAL;
+select dbms_random.value(1,50) as aleatorio from DUAL;
 select * from DOCTOR;
