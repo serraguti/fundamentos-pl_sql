@@ -141,15 +141,52 @@ begin
     PK_DEPARTAMENTOS.DELETEDEPT(88);
 end;
 select * from DEPT;
+
 --Necesito una funcionalidad que nos devuelva 
---el Apellido, el trabajo, salario y lugar de trabajo (departamento/hospital)
+--el Apellido, el oficio, salario y lugar de trabajo (departamento/hospital)
 --de todas las personas de nuestra bbdd.
 --Necesito otra funcionalidad que nos devuelva 
 --el Apellido, el trabajo, salario y lugar de trabajo (departamento/hospital)
 --dependiendo del salario.
 
 --1) CONSULTA GORDA
+select EMP.APELLIDO, EMP.OFICIO, EMP.SALARIO
+, DEPT.DNOMBRE
+from EMP
+inner join DEPT
+on EMP.DEPT_NO=DEPT.DEPT_NO
+UNION
+select DOCTOR.APELLIDO, DOCTOR.ESPECIALIDAD, DOCTOR.SALARIO
+, HOSPITAL.NOMBRE
+from DOCTOR
+inner join HOSPITAL
+on DOCTOR.HOSPITAL_COD=HOSPITAL.HOSPITAL_COD
+UNION
+select PLANTILLA.APELLIDO, PLANTILLA.FUNCION, PLANTILLA.SALARIO
+, HOSPITAL.NOMBRE
+from PLANTILLA
+inner join HOSPITAL
+on PLANTILLA.HOSPITAL_COD=HOSPITAL.HOSPITAL_COD;
 --2) CONSULTA DENTRO DE VISTA
+create or replace view V_TODOS_EMPLEADOS as
+    select EMP.APELLIDO, EMP.OFICIO, EMP.SALARIO
+    , DEPT.DNOMBRE
+    from EMP
+    inner join DEPT
+    on EMP.DEPT_NO=DEPT.DEPT_NO
+    UNION
+    select DOCTOR.APELLIDO, DOCTOR.ESPECIALIDAD, DOCTOR.SALARIO
+    , HOSPITAL.NOMBRE
+    from DOCTOR
+    inner join HOSPITAL
+    on DOCTOR.HOSPITAL_COD=HOSPITAL.HOSPITAL_COD
+    UNION
+    select PLANTILLA.APELLIDO, PLANTILLA.FUNCION, PLANTILLA.SALARIO
+    , HOSPITAL.NOMBRE
+    from PLANTILLA
+    inner join HOSPITAL
+    on PLANTILLA.HOSPITAL_COD=HOSPITAL.HOSPITAL_COD;
+select * from V_TODOS_EMPLEADOS;
 --3) PAQUETE CON DOS PROCEDIMIENTOS
 --3A) PROCEDIMIENTO PARA DEVOLVER TODOS LOS DATOS EN UN CURSOR
 --3B) PROCEDIMIENTO PARA DEVOLVER TODOS LOS DATOS EN UN CURSOR POR SALARIO
@@ -187,6 +224,57 @@ select * from DEPT;
 grant XDBADMIN to SYSTEM;
 grant ut_http to SYSTEM;
 select * from dba_network_acls;
+
+DECLARE
+  l_acl       VARCHAR2(100) := 'www.xml';
+  l_desc      VARCHAR2(100) := 'descripción del acl';
+  l_principal VARCHAR2(30)  := 'SYSTEM'; -- EN MAYÚSCULAS
+  l_host      VARCHAR2(100) := '*'; --nombre del host
+BEGIN
+  -- Crea el nuevo ACL
+  -- Proveer privilegios de conexión 
+  dbms_network_acl_admin.create_acl(l_acl, l_desc, l_principal, TRUE, 'connect');
+ 
+  -- Permisos de resolución de DNS
+  dbms_network_acl_admin.add_privilege(l_acl, l_principal, TRUE, 'resolve');
+ 
+  -- Pasamos lo parámetros nombre del acl y host
+  dbms_network_acl_admin.assign_acl(l_acl, l_host);
+ 
+  COMMIT;
+END;
+DECLARE
+  l_url            VARCHAR2(50) := 'ldap.forumsys.com:389';
+  l_http_request   UTL_HTTP.req;
+  l_http_response  UTL_HTTP.resp;
+BEGIN
+  -- Hacemos una petición
+  l_http_request  := UTL_HTTP.begin_request(l_url);
+  l_http_response := UTL_HTTP.get_response(l_http_request);
+  UTL_HTTP.end_response(l_http_response);
+END;
+BEGIN
+    DBMS_NETWORK_ACL_ADMIN.create_acl (
+        acl          => 'acl.xml',
+        description  => 'Connecting with REST API',
+        principal    => 'SYSTEM',
+        is_grant     => TRUE, 
+        privilege    => 'connect',
+        start_date   => SYSTIMESTAMP,
+        end_date     => NULL
+    );
+    
+    DBMS_NETWORK_ACL_ADMIN.assign_acl (
+        acl         => 'acl.xml',
+        host        => 'localhost', -- Or hostname of REST API server (e.g. "example.com").
+        lower_port  => 80, -- For HTTPS put 443.
+        upper_port  => NULL
+    );
+    
+    COMMIT;
+end; 
+
+
 declare
     v_req       utl_http.req;
     v_res       utl_http.resp;
@@ -200,8 +288,8 @@ begin
     -- utl_http.set_header(v_req, 'Content-Length', length(v_body));
     
     -- Invoke REST API.
-    utl_http.write_text(v_req, v_body);
-  
+    -- utl_http.write_text(v_req, v_body);
+    --req := UTL_HTTP.BEGIN_REQUEST(url);
     -- Get response.
     v_res := utl_http.get_response(v_req);
     begin
