@@ -190,6 +190,20 @@ select * from V_TODOS_EMPLEADOS;
 --3) PAQUETE CON DOS PROCEDIMIENTOS
 --3A) PROCEDIMIENTO PARA DEVOLVER TODOS LOS DATOS EN UN CURSOR
 --3B) PROCEDIMIENTO PARA DEVOLVER TODOS LOS DATOS EN UN CURSOR POR SALARIO
+---------------------------------------------------------------
+--Necesitamos un paquete con procedimiento para modificar el salario de cada 
+--Doctor de forma individual.
+--La modificación de los datos de cada doctor será de forma aleatoria.
+--Debemos comprobar el Salario de cada Doctor para ajustar el número aleatorio 
+--del incremento.
+--1) Doctor con menos de 200.000: Incremento aleatorio de 500
+--2) Doctor entre de 200.000 y 300.000: Incremento aleatorio de 300
+--3) Doctor mayor a 300.000: Incremento aleatorio de 50
+--El incremento Random lo haremos con una función dentro del paquete.
+update doctor set salario = salario + dbms_random.value(1,50);
+select dbms_random.value(1,50) from DUAL;
+
+select * from DOCTOR;
 
 
 
@@ -225,26 +239,28 @@ grant XDBADMIN to SYSTEM;
 grant ut_http to SYSTEM;
 select * from dba_network_acls;
 
-DECLARE
-  l_acl       VARCHAR2(100) := 'www.xml';
-  l_desc      VARCHAR2(100) := 'descripción del acl';
-  l_principal VARCHAR2(30)  := 'SYSTEM'; -- EN MAYÚSCULAS
-  l_host      VARCHAR2(100) := '*'; --nombre del host
+--1
 BEGIN
-  -- Crea el nuevo ACL
-  -- Proveer privilegios de conexión 
-  dbms_network_acl_admin.create_acl(l_acl, l_desc, l_principal, TRUE, 'connect');
- 
-  -- Permisos de resolución de DNS
-  dbms_network_acl_admin.add_privilege(l_acl, l_principal, TRUE, 'resolve');
- 
-  -- Pasamos lo parámetros nombre del acl y host
-  dbms_network_acl_admin.assign_acl(l_acl, l_host);
- 
-  COMMIT;
+  DBMS_NETWORK_ACL_ADMIN.CREATE_ACL (
+  acl => 'Connect_Access.xml',
+  description => 'Connect Network',
+  principal => 'SYSTEM',
+  is_grant => TRUE,
+  privilege => 'resolve',
+  start_date => NULL,
+  end_date => NULL);
 END;
+BEGIN
+  DBMS_NETWORK_ACL_ADMIN.ASSIGN_ACL ( acl => 'Connect_Access.xml',
+  host => '*',
+  lower_port => NULL,
+  upper_port => NULL);
+END;
+select UTL_INADDR.get_host_name() from dual;
+EXEC UTL_HTTP.set_wallet('C:\cert', NULL);
+EXEC show_html_from_url('https://apiejemplos.azurewebsites.net/');
 DECLARE
-  l_url            VARCHAR2(50) := 'ldap.forumsys.com:389';
+  l_url            VARCHAR2(50) := 'https://apiejemplos.azurewebsites.net/';
   l_http_request   UTL_HTTP.req;
   l_http_response  UTL_HTTP.resp;
 BEGIN
@@ -253,9 +269,10 @@ BEGIN
   l_http_response := UTL_HTTP.get_response(l_http_request);
   UTL_HTTP.end_response(l_http_response);
 END;
+
 BEGIN
     DBMS_NETWORK_ACL_ADMIN.create_acl (
-        acl          => 'acl.xml',
+        acl          => 'acl1.xml',
         description  => 'Connecting with REST API',
         principal    => 'SYSTEM',
         is_grant     => TRUE, 
@@ -265,8 +282,8 @@ BEGIN
     );
     
     DBMS_NETWORK_ACL_ADMIN.assign_acl (
-        acl         => 'acl.xml',
-        host        => 'localhost', -- Or hostname of REST API server (e.g. "example.com").
+        acl         => 'acl1.xml',
+        host        => '*', -- Or hostname of REST API server (e.g. "example.com").
         lower_port  => 80, -- For HTTPS put 443.
         upper_port  => NULL
     );
@@ -304,3 +321,51 @@ begin
             utl_http.end_response(v_res);
     end;
 end;
+
+begin
+  dbms_network_acl_admin.append_host_ace (
+    host       => 'apiejemplos.azurewebsites.net', 
+    lower_port => 443,
+    upper_port => 443,
+    ace        => xs$ace_type(privilege_list => xs$name_list('http'),
+                              principal_name => 'SYSTEM',
+                              principal_type => xs_acl.ptype_db)); 
+end;
+
+create or replace procedure show_html_from_url (
+  p_url  in  varchar2,
+  p_username in varchar2 default null,
+  p_password in varchar2 default null
+) as
+  l_http_request   utl_http.req;
+  l_http_response  utl_http.resp;
+  l_text           varchar2(32767);
+begin
+  -- Make a http request and get the response.
+  l_http_request  := utl_http.begin_request(p_url);
+
+  -- Use basic authentication if required.
+  if p_username is not null and p_password is not null then
+    utl_http.set_authentication(l_http_request, p_username, p_password);
+  end if;
+
+  l_http_response := utl_http.get_response(l_http_request);
+
+  -- Loop through the response.
+  begin
+    loop
+      utl_http.read_text(l_http_response, l_text, 32766);
+      dbms_output.put_line (l_text);
+    end loop;
+  exception
+    when utl_http.end_of_body then
+      utl_http.end_response(l_http_response);
+  end;
+exception
+  when others then
+    utl_http.end_response(l_http_response);
+    raise;
+end show_html_from_url;
+
+exec utl_http.set_wallet('file:C:\cert', null);
+exec show_html_from_url('https://apiejemplos.azurewebsites.net/api/Coches');
