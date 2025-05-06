@@ -238,6 +238,36 @@ end;
 --2) Doctor entre de 200.000 y 300.000: Incremento aleatorio de 300
 --3) Doctor mayor a 300.000: Incremento aleatorio de 50
 --El incremento Random lo haremos con una función dentro del paquete.
+declare
+    cursor c_doctor is
+    select doctor_no, salario, apellido from DOCTOR;
+    v_random number;
+begin
+    for v_doc in c_doctor
+    loop
+        select random_doctores(v_doc.DOCTOR_NO) into v_random from DUAL;
+        update DOCTOR set SALARIO = v_random
+        where DOCTOR_NO = v_doc.DOCTOR_NO;
+        commit;
+        dbms_output.put_line('Apellido: ' || v_doc.APELLIDO 
+        || ', Salario: ' || v_doc.SALARIO || ', Incremento: '
+        || v_random);
+    end loop;
+end;
+
+create or replace function random_doctores
+(p_iddoctor DOCTOR.DOCTOR_NO%TYPE)
+return number
+AS
+    v_random number;
+    v_salario DOCTOR.SALARIO%TYPE;
+begin
+    select trunc(dbms_random.value(1,50)) into v_random from DUAL;
+    select salario into v_salario from DOCTOR
+    where DOCTOR_NO=p_iddoctor;
+    return v_salario + v_random;
+end;
+select * from DOCTOR;
 update doctor set salario = salario + dbms_random.value(1,50);
-select dbms_random.value(1,50) as aleatorio from DUAL;
+select trunc(dbms_random.value(1,50)) as aleatorio from DUAL;
 select * from DOCTOR;
