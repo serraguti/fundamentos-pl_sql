@@ -1,4 +1,5 @@
 ---ejemplo de trigger capturando informacion
+drop trigger tr_dept_before_insert;
 create or replace trigger tr_dept_before_insert
 before insert 
 on DEPT
@@ -11,6 +12,7 @@ begin
 end;
 insert into DEPT values (111, 'NUEVO', 'TOLEDO');
 --delete
+drop trigger tr_dept_before_delete;
 create or replace trigger tr_dept_before_delete
 before delete 
 on DEPT
@@ -23,6 +25,7 @@ begin
 end;
 delete from DEPT where DEPT_NO=478;
 --update
+drop trigger tr_dept_before_update;
 create or replace trigger tr_dept_before_update
 before update 
 on DEPT
@@ -81,8 +84,9 @@ begin
 end;
 insert into DEPT values (5, 'MILAN', 'BARCELONA');
 select * from DEPT;
+DROP trigger tr_dept_control_localidades;
 create or replace trigger tr_dept_control_localidades
-before insert 
+AFTER insert --VAMOS A COMPROBAR DESPUES DE INSERTAR
 on DEPT
 for each row
 declare
@@ -96,5 +100,47 @@ begin
         , 'Solo un departamento por ciudad ' || :new.LOC);
     end if;
 end;
-insert into DEPT values (6, 'MILANA', 'TERUEL');
+insert into DEPT values (6, 'MILAN', 'parla');
+select * from DEPT where LOC='TERUEL';
+---ejemplo integridad relacional con update
+--si cambiamos un id de departamento que se modifiquen tambien
+--los empleados asociados.
+drop trigger tr_update_dept_cascade;
+create or replace trigger tr_update_dept_cascade
+before update
+on DEPT
+for each row 
+    when (new.DEPT_NO <> old.DEPT_NO)
+declare
+begin
+    dbms_output.put_line('DEPT_NO cambiando');
+    --modificamos los datos asociados (EMP)
+    update EMP set DEPT_NO=:new.DEPT_NO where 
+    DEPT_NO=:old.DEPT_NO;
+end;
+select * from DEPT;
+update DEPT set DEPT_NO=31 where dept_no=30;
+update DEPT set LOC='ZARAGOZA' where dept_no=30;
+select * from EMP where DEPT_NO=31;
+--Impedir insertar un nuevo PRESIDENTE si ya existe uno en la tabla EMP.
+create or replace trigger tr_emp_control_presi_insert
+before insert
+on EMP
+for each row
+    when (upper(new.OFICIO) = 'PRESIDENTE')
+declare
+    v_presis NUMBER;
+begin
+    dbms_output.put_line('Derrocando presidente!!!');
+    select count(EMP_NO) into v_presis from EMP
+    where upper(OFICIO)='PRESIDENTE';
+    if v_presis <> 0 then
+        RAISE_APPLICATION_ERROR(-20001, 'Solo un Presidente activo');
+    end if;
+end;
+select * from EMP;
+insert into EMP values (2222, 'USURPADOR', 'PRESIDENTE'
+, 7566, sysdate, 120000, 2000, 20);
+insert into EMP values (2224, 'USURPADOR', 'PRESIDENTA'
+, 7566, sysdate, 120000, 2000, 20);
 
