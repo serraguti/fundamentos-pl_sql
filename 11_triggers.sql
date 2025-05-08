@@ -123,6 +123,7 @@ update DEPT set DEPT_NO=31 where dept_no=30;
 update DEPT set LOC='ZARAGOZA' where dept_no=30;
 select * from EMP where DEPT_NO=31;
 --Impedir insertar un nuevo PRESIDENTE si ya existe uno en la tabla EMP.
+drop trigger tr_emp_control_presi_insert;
 create or replace trigger tr_emp_control_presi_insert
 before insert
 on EMP
@@ -143,4 +144,31 @@ insert into EMP values (2222, 'USURPADOR', 'PRESIDENTE'
 , 7566, sysdate, 120000, 2000, 20);
 insert into EMP values (2224, 'USURPADOR', 'PRESIDENTA'
 , 7566, sysdate, 120000, 2000, 20);
+--PACKAGE PARA ALMACENAR LAS VARIABLES ENTRE TRIGGERS
+create or replace package PK_TRIGGERS
+as
+    v_nueva_localidad DEPT.LOC%TYPE;
+end PK_TRIGGERS;
+create or replace trigger tr_dept_control_localidades_row
+before update --VAMOS A COMPROBAR ANTES DE UPDATE
+on DEPT
+for each row
+declare
+begin
+    dbms_output.PUT_LINE('For each ROW ');
+    --almacenamos el valor de la nueva localidad
+    PK_TRIGGERS.v_nueva_localidad := :new.LOC;
+end;
+drop trigger tr_dept_control_localidades_after;
+--creamos el trigger de update para after
+create or replace trigger tr_dept_control_localidades_after
+after update
+on DEPT
+declare
+begin
+    dbms_output.PUT_LINE('Localidad nueva: ' || PK_TRIGGERS.v_nueva_localidad);
+end;
 
+update DEPT set LOC='CADIZ' where DEPT_NO=10;
+select * from DEPT;
+rollback;
