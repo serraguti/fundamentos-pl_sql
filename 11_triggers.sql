@@ -165,10 +165,58 @@ create or replace trigger tr_dept_control_localidades_after
 after update
 on DEPT
 declare
+    v_numero NUMBER;
 begin
+    select count(DEPT_NO) into v_numero from DEPT
+    where upper(LOC)=upper(PK_TRIGGERS.v_nueva_localidad);
+    if (v_numero > 0) then
+        RAISE_APPLICATION_ERROR(-20001, 'Solo un departamento por localidad');
+    end if;
     dbms_output.PUT_LINE('Localidad nueva: ' || PK_TRIGGERS.v_nueva_localidad);
 end;
 
-update DEPT set LOC='CADIZ' where DEPT_NO=10;
+update DEPT set LOC='CADIZ' where DEPT_NO=20;
 select * from DEPT;
 rollback;
+
+--creamos una vista con todos los datos de los departamentos
+create or replace view vista_departamentos
+AS
+    select * from DEPT;
+--SOLO TRABAJAMOS CON LA VISTA
+--creamos un trigger sobre la vista
+create or replace trigger tr_vista_dept
+instead of insert
+on vista_departamentos
+declare
+begin
+    dbms_output.PUT_LINE('Insertando en Vista DEPT');
+end;
+insert into VISTA_DEPARTAMENTOS values 
+(12, 'VISTA', 'CON TRIGGER');
+select * from vista_departamentos;
+--VAMOS A CREAR UNA VISTA CON LOS DATOS DE LOS EMPLEADOS
+--PERO SIN SUS DATOS SENSIBLES (salario, comision, fecha_alt)
+create or replace view vista_empleados
+as
+    select EMP_NO, APELLIDO, OFICIO, DIR, DEPT_NO from EMP;
+select * from VISTA_EMPLEADOS;
+insert into VISTA_EMPLEADOS values (555, 'el nuevo', 'BECARIO', 7566, 31);
+--si miramos en la tabla...
+select * from EMP ORDER BY EMP_NO;
+--creamos un trigger rellenando los huecos que quedan de EMP
+create or replace trigger tr_vista_empleados
+instead of INSERT
+on vista_empleados
+declare
+begin
+    --con new capturamos los datos que vienen en la vista 
+    --y rellenamos el resto
+    insert into EMP values (:new.EMP_NO, :new.APELLIDO, :new.OFICIO
+    , :new.DIR, sysdate, 0, 0, :new.DEPT_NO);
+end;
+rollback;
+
+
+
+
