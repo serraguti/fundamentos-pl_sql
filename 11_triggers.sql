@@ -241,8 +241,7 @@ begin
 end;
 insert into VISTA_DOCTORES values 
 (117, 'House 3', 'Especialista', 450000, 'provincianos');
-    select nvl(HOSPITAL_COD, 0) as HOSPITAL_COD from HOSPITAL
-    where upper(NOMBRE)=upper('NO EXISTE');
+
 
 
 
