@@ -216,6 +216,33 @@ begin
     , :new.DIR, sysdate, 0, 0, :new.DEPT_NO);
 end;
 rollback;
+select * from DOCTOR;
+--vamos a crear una vista para mostrar doctores
+create or replace view vista_doctores
+as
+    select DOCTOR.DOCTOR_NO, DOCTOR.APELLIDO, DOCTOR.ESPECIALIDAD
+    , DOCTOR.SALARIO, HOSPITAL.NOMBRE
+    from DOCTOR
+    inner join HOSPITAL
+    on DOCTOR.HOSPITAL_COD = HOSPITAL.HOSPITAL_COD;
+select * from VISTA_DOCTORES;
+
+create or replace trigger tr_vista_doctor
+instead of INSERT
+on vista_doctores
+declare
+    v_codigo HOSPITAL.HOSPITAL_COD%TYPE;
+begin
+    select HOSPITAL_COD into v_codigo from HOSPITAL
+    where upper(NOMBRE)=upper(:new.NOMBRE);
+    insert into DOCTOR values
+    (v_codigo, :new.DOCTOR_NO, :new.APELLIDO, :new.ESPECIALIDAD
+    , :new.SALARIO);
+end;
+insert into VISTA_DOCTORES values 
+(117, 'House 3', 'Especialista', 450000, 'provincianos');
+    select nvl(HOSPITAL_COD, 0) as HOSPITAL_COD from HOSPITAL
+    where upper(NOMBRE)=upper('NO EXISTE');
 
 
 
